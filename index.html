@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exemplo de API Dinâmica</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            text-align: center;
+            background-color: #f0f0f0;
+            padding: 20px;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        p {
+            max-width: 600px;
+            margin: 0 auto 20px;
+            color: #555;
+        }
+        
+        #result {
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            max-width: 800px;
+            text-align: left;
+        }
+        
+        .user-card {
+            background-color: #f8f9fa;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            transition: transform 0.2s;
+        }
+        
+        .user-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .user-name {
+            font-weight: bold;
+            color: #2c3e50;
+            font-size: 1.2em;
+            margin-bottom: 5px;
+        }
+        
+        .user-detail {
+            margin: 5px 0;
+            color: #555;
+        }
+        
+        .error-message {
+            background-color: #e74c3c;
+            color: white;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px auto;
+            max-width: 600px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #7f8c8d;
+        }
+        
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        .controls {
+            margin: 20px 0;
+        }
+        
+        .search-box {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 300px;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Exemplo de API Dinâmica</h1>
+    <p>Este projeto consome dados de uma API e os exibe dinamicamente. Os dados são obtidos da API JSONPlaceholder, que fornece dados de usuários fictícios.</p>
+    
+    <div class="controls">
+        <button id="loadData">Carregar Dados</button>
+        <button id="clearData">Limpar Dados</button>
+        <input type="text" id="searchInput" class="search-box" placeholder="Filtrar por nome...">
+    </div>
+    
+    <div id="result"></div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const resultDiv = document.getElementById('result');
+            const loadButton = document.getElementById('loadData');
+            const clearButton = document.getElementById('clearData');
+            const searchInput = document.getElementById('searchInput');
+            
+            let usersData = []; // Armazenar os dados dos usuários
+            
+            // Função para carregar dados da API
+            function loadUsers() {
+                resultDiv.innerHTML = '<div class="loading">Carregando dados...</div>';
+                
+                fetch('https://jsonplaceholder.typicode.com/users')
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Erro na resposta da API');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        usersData = data;
+                        displayUsers(data);
+                    })
+                    .catch(error => {
+                        console.error('Erro ao buscar dados:', error);
+                        resultDiv.innerHTML = `<div class="error-message">Erro ao carregar dados: ${error.message}</div>`;
+                    });
+            }
+            
+            // Função para exibir usuários
+            function displayUsers(users) {
+                if (users.length === 0) {
+                    resultDiv.innerHTML = '<div class="loading">Nenhum usuário encontrado.</div>';
+                    return;
+                }
+                
+                resultDiv.innerHTML = '';
+                users.forEach(user => {
+                    const userCard = document.createElement('div');
+                    userCard.className = 'user-card';
+                    userCard.innerHTML = `
+                        <div class="user-name">${user.name}</div>
+                        <div class="user-detail"><strong>Email:</strong> ${user.email}</div>
+                        <div class="user-detail"><strong>Telefone:</strong> ${user.phone}</div>
+                        <div class="user-detail"><strong>Website:</strong> ${user.website}</div>
+                        <div class="user-detail"><strong>Empresa:</strong> ${user.company.name}</div>
+                        <div class="user-detail"><strong>Cidade:</strong> ${user.address.city}</div>
+                    `;
+                    resultDiv.appendChild(userCard);
+                });
+            }
+            
+            // Função para filtrar usuários
+            function filterUsers() {
+                const searchTerm = searchInput.value.toLowerCase();
+                const filteredUsers = usersData.filter(user => 
+                    user.name.toLowerCase().includes(searchTerm)
+                );
+                displayUsers(filteredUsers);
+            }
+            
+            // Event listeners
+            loadButton.addEventListener('click', loadUsers);
+            clearButton.addEventListener('click', function() {
+                resultDiv.innerHTML = '';
+                usersData = [];
+            });
+            searchInput.addEventListener('input', filterUsers);
+            
+            // Carregar dados automaticamente ao iniciar
+            loadUsers();
+        });
+    </script>
+</body>
+</html>
